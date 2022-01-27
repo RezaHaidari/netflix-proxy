@@ -289,6 +289,8 @@ urls = (
     r'/ddns', 'DDNSIndex',
     r'/ddns/add', 'DDNSAdd',
     r'/ddns/delete', 'DDNSDelete',
+    r'/ddns/autoadd','AutoDDNSAdd',
+    r'/ddns/autodelete','AutoDDNSDelete',
     r'.*', 'Index'
 )
 
@@ -450,6 +452,50 @@ class AutoAdd:
             if is_ipv4: result = run_ipt_cmd(ipadr, 'I')
             if is_ipv6: result = run_ipt6_cmd(ipadr, 'I')
             web.debug('iptables_update: %s' % [result])
+            return 'OK'
+        except Exception as e:
+            web.debug(traceback.print_exc())
+            return user.ID
+
+
+
+class AutoDDNSAdd:
+    def GET(self):
+        try:
+            params = web.input()
+            user = validate_user(params.username,params.password)
+            if user is None: return 'Error: login'
+
+            domain = params.domain
+
+            # userid = int(user.ID)
+            userid = user.ID
+  
+            db_result = db.insert('DDNS',
+                                  user_id=userid,
+                                  domain=domain)
+            web.debug('db_update: %s' % [db_result])
+            return 'OK'
+        except Exception as e:
+            web.debug(traceback.print_exc())
+            return user.ID
+
+class AutoDDNSDelete:
+    def GET(self):
+        try:
+            params = web.input()
+            user = validate_user(params.username,params.password)
+            if user is None: return 'Error: login'
+
+            domain = params.domain
+
+            # userid = int(user.ID)
+            userid = user.ID
+
+            db_result = db.delete('DDNS', where="user_id=%s AND domain='%s'" % (userid,
+                                                                               domain))
+  
+            web.debug('db_update: %s' % [db_result])
             return 'OK'
         except Exception as e:
             web.debug(traceback.print_exc())
